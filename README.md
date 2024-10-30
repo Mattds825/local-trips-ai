@@ -14,5 +14,8 @@ change how far they are willing to travel and get an instant trip idea
 
 - Next Js
 - Drizzle
-- Shadcn
+- Shadcn UI
+- Hero Highlight Component from [Aceternity UI](https://ui.aceternity.com/components/hero-highlight) 
+- clerk authentication
 - OpenAi
+- partially from this [tutorial](https://www.youtube.com/watch?v=6aAfudm8aNI&list=WL&index=56) by Orc Dev

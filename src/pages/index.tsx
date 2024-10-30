@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { HeroHighlight, Highlight } from "../components/ui/hero-highlight";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -30,9 +31,12 @@ export default function Home() {
             you don't have to go far
           </Highlight>
         </motion.h1>
-        <Button className="mx-auto text-3xl text-slate-800" variant="link">
-          start
-        </Button>
+ 
+        <Link className="mx-auto" href="/travel-planner/page">
+          <Button className="mx-auto text-3xl text-slate-800 hover:tracking-widest transition-all duration-300" variant="link">
+            start
+          </Button>
+        </Link>
       </HeroHighlight>
     </main>
   );
