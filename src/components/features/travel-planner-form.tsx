@@ -1,8 +1,10 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { addDays, format } from "date-fns";
 import { date, z } from "zod";
+import { cn } from "@/lib/utils";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -15,18 +17,60 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Calendar } from "../ui/calendar";
-import { cn } from "@/lib/utils";
-import { addDays, format } from "date-fns";
-import { CalendarIcon } from "@radix-ui/react-icons";
+import { CalendarIcon, CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
 
+// define the form schema using zod
 const formSchema = z.object({
   startDate: z.date(),
   endDate: z.date(),
+  budget: z.number().min(0),
+  interests: z.array(z.string()).min(1),
+  location: z.string().optional(),
 });
 
+// define common interests that can be used to suggest a local trip destination
+const interests = [
+  {
+    value: "outdoors",
+    label: "outdoors",
+  },
+  {
+    value: "culture",
+    label: "culture",
+  },
+  {
+    value: "food",
+    label: "food",
+  },
+  {
+    value: "history",
+    label: "history",
+  },
+  {
+    value: "adventure",
+    label: "adventure",
+  },
+  {
+    value: "relaxation",
+    label: "relaxation",
+  },
+];
+
+// define the form component
 const TravelPlannerForm = () => {
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+
   // 1. Define your form.
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,6 +90,7 @@ const TravelPlannerForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <div className="flex gap-4">
+          {/* startDate form field */}
           <FormField
             control={form.control}
             name="startDate"
@@ -94,6 +139,7 @@ const TravelPlannerForm = () => {
               </FormItem>
             )}
           />
+          {/* endDate form field */}
           <FormField
             control={form.control}
             name="endDate"
@@ -144,6 +190,126 @@ const TravelPlannerForm = () => {
             )}
           />
         </div>
+
+        {/* budget form field */}
+        <FormField
+          control={form.control}
+          name="budget"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Budget</FormLabel>
+              <Input
+                {...field}
+                type="number"
+                onChange={(e) => field.onChange(Number(e.target.value))}
+              />
+              <FormDescription>How much you plan to spend?</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* interest selection form field */}
+        <FormField
+          control={form.control}
+          name="interests"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Interests</FormLabel>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn(
+                        "w-[200px] justify-between",
+                        !field.value && "text-muted-foreground"
+                      )}
+                    >
+                      Selected Interests
+                      <CaretSortIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent className="w-[200px] p-0">
+                  <Command>
+                    <CommandInput
+                      placeholder="Search activity..."
+                      className="h-9"
+                    />
+                    <CommandList>
+                      <CommandEmpty>No activity found.</CommandEmpty>
+                      <CommandGroup>
+                        {interests.map((interest) => (
+                          <CommandItem
+                            value={interest.label}
+                            key={interest.value}
+                            onSelect={() => {
+                              if (selectedInterests.includes(interest.label)) {
+                                setSelectedInterests(
+                                  selectedInterests.filter(
+                                    (item) => item !== interest.label
+                                  )
+                                );
+                                form.setValue(
+                                  "interests",
+                                  selectedInterests.filter(
+                                    (item) => item !== interest.label
+                                  )
+                                );
+                              } else {
+                                setSelectedInterests([
+                                  ...selectedInterests,
+                                  interest.label,
+                                ]);
+                                form.setValue("interests", [
+                                  ...selectedInterests,
+                                  interest.label,
+                                ]);
+                              }
+                            }}
+                          >
+                            {interest.label}
+                            <CheckIcon
+                              className={cn(
+                                "ml-auto h-4 w-4",
+                                selectedInterests.includes(interest.value)
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+              <FormDescription>
+                Let us know what you like to do during your trip.
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* location form field */}
+        <FormField
+          control={form.control}
+          name="location"
+          render={({ field }) => (
+            <FormItem className="flex flex-col">
+              <FormLabel>Location</FormLabel>
+              <Input {...field} placeholder="enter you location"/>
+              <FormDescription>
+                Where are you located 
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
         <Button type="submit">Submit</Button>
       </form>
     </Form>
