@@ -27,15 +27,8 @@ import {
 } from "@/components/ui/command";
 import { Calendar } from "../ui/calendar";
 import { CalendarIcon, CaretSortIcon, CheckIcon } from "@radix-ui/react-icons";
-
-// define the form schema using zod
-const formSchema = z.object({
-  startDate: z.date(),
-  endDate: z.date(),
-  budget: z.number().min(0),
-  interests: z.array(z.string()).min(1),
-  location: z.string().optional(),
-});
+import { formSchema } from "../../pages/api/schemas";
+import { generateTripPlan } from "../../pages/api/ai";
 
 // define common interests that can be used to suggest a local trip destination
 const interests = [
@@ -81,11 +74,25 @@ const TravelPlannerForm = () => {
   });
 
   // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
-  }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    try {
+      const response = await fetch("/api/generate-trip-plan", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+      if (!response.ok) {
+        throw new Error("Failed to generate trip plan");
+      }
+      const data = await response.json();
+      console.log("Trip plan generated:");
+      console.log(data);
+    } catch (error) {
+      console.error("Error generating trip plan:", error);
+    }
+  };
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -301,10 +308,8 @@ const TravelPlannerForm = () => {
           render={({ field }) => (
             <FormItem className="flex flex-col">
               <FormLabel>Location</FormLabel>
-              <Input {...field} placeholder="enter you location"/>
-              <FormDescription>
-                Where are you located 
-              </FormDescription>
+              <Input {...field} placeholder="enter you location" />
+              <FormDescription>Where are you located</FormDescription>
               <FormMessage />
             </FormItem>
           )}
